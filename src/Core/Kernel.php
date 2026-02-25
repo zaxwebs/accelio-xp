@@ -19,7 +19,7 @@ final class Kernel
     /** @var array<string, string> */
     private const SECURITY_HEADERS = [
         'X-Content-Type-Options' => 'nosniff',
-        'X-Frame-Options' => 'DENY',
+        'X-Frame-Options' => 'SAMEORIGIN',
         'X-XSS-Protection' => '0',
         'Referrer-Policy' => 'strict-origin-when-cross-origin',
     ];

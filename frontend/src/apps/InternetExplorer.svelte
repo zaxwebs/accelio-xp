@@ -7,22 +7,42 @@
         Star,
         Globe,
         Search,
+        X,
     } from "lucide-svelte";
 
-    let url = "https://en.wikipedia.org/wiki/Windows_XP";
+    const HOMEPAGE = "https://en.wikipedia.org/wiki/Windows_XP";
+    const PROXY_BASE = "/api/proxy?url=";
+
+    let url = HOMEPAGE;
     let inputUrl = url;
     let loading = false;
-    let iframeSrc = url;
+    let iframeSrc = PROXY_BASE + encodeURIComponent(url);
+
+    // History stack
+    let history = [url];
+    let historyIndex = 0;
+
+    function proxyUrl(rawUrl) {
+        return PROXY_BASE + encodeURIComponent(rawUrl);
+    }
 
     function navigate() {
         let target = inputUrl.trim();
+        if (!target) return;
         if (!target.startsWith("http://") && !target.startsWith("https://")) {
             target = "https://" + target;
         }
         url = target;
         inputUrl = target;
-        iframeSrc = target;
+        iframeSrc = proxyUrl(target);
         loading = true;
+
+        // Push to history (trim forward entries)
+        if (historyIndex < history.length - 1) {
+            history = history.slice(0, historyIndex + 1);
+        }
+        history = [...history, target];
+        historyIndex = history.length - 1;
     }
 
     function handleKeydown(e) {
@@ -30,20 +50,66 @@
     }
 
     function goHome() {
-        inputUrl = "https://en.wikipedia.org/wiki/Windows_XP";
+        inputUrl = HOMEPAGE;
         navigate();
     }
 
     function refresh() {
+        loading = true;
         iframeSrc = "";
         setTimeout(() => {
-            iframeSrc = url;
+            iframeSrc = proxyUrl(url);
         }, 50);
+    }
+
+    function goBack() {
+        if (historyIndex <= 0) return;
+        historyIndex--;
+        url = history[historyIndex];
+        inputUrl = url;
+        iframeSrc = proxyUrl(url);
+        loading = true;
+    }
+
+    function goForward() {
+        if (historyIndex >= history.length - 1) return;
+        historyIndex++;
+        url = history[historyIndex];
+        inputUrl = url;
+        iframeSrc = proxyUrl(url);
+        loading = true;
     }
 
     function onLoad() {
         loading = false;
+
+        // Try to detect navigation inside iframe to update address bar
+        try {
+            const iframe = document.querySelector(".ie-iframe");
+            if (iframe && iframe.contentWindow) {
+                const loc = iframe.contentWindow.location;
+                if (loc.pathname === "/api/proxy") {
+                    const params = new URLSearchParams(loc.search);
+                    const navigatedUrl = params.get("url");
+                    if (navigatedUrl && navigatedUrl !== url) {
+                        url = navigatedUrl;
+                        inputUrl = navigatedUrl;
+                        // Push to history
+                        if (historyIndex < history.length - 1) {
+                            history = history.slice(0, historyIndex + 1);
+                        }
+                        history = [...history, navigatedUrl];
+                        historyIndex = history.length - 1;
+                    }
+                }
+            }
+        } catch (e) {
+            // Cross-origin — ignore silently
+        }
     }
+
+    $: canGoBack = historyIndex > 0;
+    $: canGoForward = historyIndex < history.length - 1;
 </script>
 
 <div class="ie">
@@ -57,10 +123,20 @@
     </div>
 
     <div class="ie-toolbar">
-        <button class="ie-nav-btn" title="Back">
+        <button
+            class="ie-nav-btn"
+            title="Back"
+            on:click={goBack}
+            disabled={!canGoBack}
+        >
             <ArrowLeft size={16} />
         </button>
-        <button class="ie-nav-btn" title="Forward">
+        <button
+            class="ie-nav-btn"
+            title="Forward"
+            on:click={goForward}
+            disabled={!canGoForward}
+        >
             <ArrowRight size={16} />
         </button>
         <button class="ie-nav-btn" on:click={refresh} title="Refresh">
@@ -93,19 +169,20 @@
 
     <div class="ie-content">
         {#if loading}
-            <div class="ie-loading">Loading...</div>
+            <div class="ie-loading">
+                <div class="ie-loading-bar"></div>
+            </div>
         {/if}
         <iframe
             src={iframeSrc}
             title="Internet Explorer"
             class="ie-iframe"
             on:load={onLoad}
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
         ></iframe>
     </div>
 
     <div class="ie-status-bar">
-        <span>{loading ? "Loading..." : "Done"}</span>
+        <span>{loading ? "Opening page..." : "Done"}</span>
         <Globe size={12} color="#666" />
     </div>
 </div>
@@ -153,9 +230,13 @@
         color: #333;
         padding: 0;
     }
-    .ie-nav-btn:hover {
+    .ie-nav-btn:hover:not(:disabled) {
         border-color: var(--xp-button-highlight) var(--xp-button-shadow)
             var(--xp-button-shadow) var(--xp-button-highlight);
+    }
+    .ie-nav-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
     }
 
     .ie-address-row {
@@ -201,6 +282,9 @@
         height: 22px;
         font-family: var(--xp-font);
     }
+    .ie-go-btn:hover {
+        background: #e8e4d8;
+    }
 
     .ie-content {
         flex: 1;
@@ -209,12 +293,27 @@
     }
     .ie-loading {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 14px;
-        color: #666;
-        z-index: 1;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        z-index: 2;
+        background: #e0e0e0;
+        overflow: hidden;
+    }
+    .ie-loading-bar {
+        width: 30%;
+        height: 100%;
+        background: linear-gradient(90deg, #0078d4, #00a2ff, #0078d4);
+        animation: ie-progress 1.2s ease-in-out infinite;
+    }
+    @keyframes ie-progress {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(400%);
+        }
     }
     .ie-iframe {
         width: 100%;
