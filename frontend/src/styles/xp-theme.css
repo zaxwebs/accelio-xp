@@ -1,0 +1,137 @@
+/* ================================================
+   WINDOWS XP LUNA BLUE THEME
+   ================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Tahoma:wght@400;700&display=swap');
+
+:root {
+  /* XP Luna Blue palette */
+  --xp-blue-dark: #0054E3;
+  --xp-blue: #245EDC;
+  --xp-blue-light: #3A8BFF;
+  --xp-blue-highlight: #4E98FF;
+  --xp-titlebar-start: #0058E6;
+  --xp-titlebar-end: #3A8BFF;
+  --xp-titlebar-inactive-start: #7B96EB;
+  --xp-titlebar-inactive-end: #A4B8ED;
+  --xp-start-green-start: #388234;
+  --xp-start-green-end: #5DBF59;
+  --xp-taskbar-bg: #245EDC;
+  --xp-taskbar-gradient-start: #1F5BD6;
+  --xp-taskbar-gradient-end: #3C8BFF;
+  --xp-desktop-bg: #3A6EA5;
+  --xp-window-bg: #ECE9D8;
+  --xp-window-border: #0054E3;
+  --xp-menu-bg: #FFFFFF;
+  --xp-menu-highlight: #316AC5;
+  --xp-text: #000000;
+  --xp-text-light: #FFFFFF;
+  --xp-button-face: #ECE9D8;
+  --xp-button-highlight: #FFFFFF;
+  --xp-button-shadow: #ACA899;
+  --xp-button-dark-shadow: #716F64;
+  --xp-selection: #316AC5;
+  --xp-close-red: #C62300;
+  --xp-close-red-hover: #E04006;
+  --xp-minimize-blue: #2462C7;
+  --xp-minimize-blue-hover: #3C7BEB;
+  --xp-scrollbar-bg: #F1EFE2;
+  --xp-scrollbar-thumb: #CEC8B0;
+  --xp-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--xp-font);
+  font-size: 11px;
+  color: var(--xp-text);
+  user-select: none;
+  cursor: default;
+}
+
+/* ---- XP 3D Button Style ---- */
+.xp-button {
+  font-family: var(--xp-font);
+  font-size: 11px;
+  background: var(--xp-button-face);
+  border: 1px solid;
+  border-color: var(--xp-button-highlight) var(--xp-button-dark-shadow) var(--xp-button-dark-shadow) var(--xp-button-highlight);
+  padding: 2px 12px;
+  min-width: 75px;
+  height: 23px;
+  cursor: pointer;
+  outline: none;
+}
+.xp-button:active {
+  border-color: var(--xp-button-dark-shadow) var(--xp-button-highlight) var(--xp-button-highlight) var(--xp-button-dark-shadow);
+  padding: 3px 11px 1px 13px;
+}
+
+/* ---- XP Input/Textarea ---- */
+.xp-input, .xp-textarea {
+  font-family: var(--xp-font);
+  font-size: 11px;
+  background: #fff;
+  border: 1px solid;
+  border-color: var(--xp-button-shadow) var(--xp-button-highlight) var(--xp-button-highlight) var(--xp-button-shadow);
+  padding: 2px 4px;
+  outline: none;
+}
+.xp-input:focus, .xp-textarea:focus {
+  border-color: var(--xp-blue);
+}
+
+/* ---- Scrollbar styling ---- */
+::-webkit-scrollbar {
+  width: 17px;
+  height: 17px;
+}
+::-webkit-scrollbar-track {
+  background: var(--xp-scrollbar-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--xp-scrollbar-thumb);
+  border: 1px solid #999;
+}
+::-webkit-scrollbar-button {
+  background: var(--xp-button-face);
+  border: 1px solid;
+  border-color: var(--xp-button-highlight) var(--xp-button-shadow) var(--xp-button-shadow) var(--xp-button-highlight);
+  width: 17px;
+  height: 17px;
+}
+
+/* ---- Context Menu ---- */
+.xp-context-menu {
+  position: fixed;
+  background: var(--xp-menu-bg);
+  border: 1px solid #808080;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  padding: 2px 0;
+  min-width: 180px;
+  z-index: 99999;
+}
+.xp-context-menu-item {
+  padding: 4px 24px 4px 28px;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.xp-context-menu-item:hover {
+  background: var(--xp-menu-highlight);
+  color: white;
+}
+.xp-context-menu-separator {
+  border-top: 1px solid #C0C0C0;
+  margin: 3px 2px;
+}

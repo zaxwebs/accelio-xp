@@ -1,0 +1,33 @@
+{
+  "name": "accelio/framework",
+  "description": "Accelio: a lean PHP framework built for AI-assisted development.",
+  "type": "project",
+  "require": {
+    "php": "^8.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Accelio\\": "src/"
+    },
+    "files": [
+      "src/Support/helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "serve": "php -S 127.0.0.1:8080 -t public",
+    "test": "vendor/bin/pest"
+  },
+  "require-dev": {
+    "pestphp/pest": "^4.4"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  }
+}
