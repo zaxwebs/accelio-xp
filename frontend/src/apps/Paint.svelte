@@ -1,6 +1,23 @@
 <script>
     import { onMount } from "svelte";
-    import { Pencil, Eraser, Square, Circle, Minus } from "lucide-svelte";
+    import {
+        Pencil,
+        Eraser,
+        Square,
+        Circle,
+        Minus,
+        Image,
+    } from "lucide-svelte";
+    import { windows } from "../stores/windows.js";
+    import {
+        uploadImage,
+        getImageUrl,
+        getDocument,
+        listDocuments,
+    } from "../lib/api.js";
+
+    export let windowId = null;
+    export let documentId = null;
 
     let canvas;
     let ctx;
@@ -12,6 +29,13 @@
     let lastY = 0;
     let startX = 0;
     let startY = 0;
+
+    let currentDocId = documentId;
+    let fileName = "Untitled";
+    let menuOpen = null;
+    let showFilePicker = false;
+    let fileList = [];
+    let saving = false;
 
     const colors = [
         "#000000",
@@ -42,11 +66,38 @@
 
     const brushSizes = [1, 2, 3, 5, 8, 12];
 
-    onMount(() => {
+    const fileMenuItems = ["New", "Open...", "Save", "Save As...", "-", "Exit"];
+
+    onMount(async () => {
         ctx = canvas.getContext("2d");
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (documentId) {
+            await loadImage(documentId);
+        }
     });
+
+    async function loadImage(id) {
+        try {
+            const res = await getDocument(id);
+            if (res.ok) {
+                fileName = res.data.name;
+                currentDocId = res.data.id;
+
+                const img = new window.Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => {
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = getImageUrl(id);
+            }
+        } catch (e) {
+            console.error("Failed to load image:", e);
+        }
+    }
 
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -119,11 +170,123 @@
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+
+    async function handleSave() {
+        if (saving) return;
+        saving = true;
+        try {
+            const base64 = canvas.toDataURL("image/png");
+            if (!currentDocId) {
+                const name = prompt("Save as:", fileName || "Untitled.png");
+                if (!name) {
+                    saving = false;
+                    return;
+                }
+                fileName = name;
+            }
+            const res = await uploadImage(
+                fileName,
+                base64,
+                currentDocId || null,
+            );
+            if (res.ok) {
+                currentDocId = res.data.id;
+            }
+        } catch (e) {
+            console.error("Failed to save:", e);
+            alert("Failed to save image.");
+        }
+        saving = false;
+    }
+
+    async function handleSaveAs() {
+        const name = prompt("Save as:", fileName || "Untitled.png");
+        if (!name) return;
+
+        saving = true;
+        try {
+            fileName = name;
+            const base64 = canvas.toDataURL("image/png");
+            const res = await uploadImage(name, base64, null);
+            if (res.ok) {
+                currentDocId = res.data.id;
+            }
+        } catch (e) {
+            console.error("Failed to save:", e);
+            alert("Failed to save image.");
+        }
+        saving = false;
+    }
+
+    async function handleOpenDialog() {
+        try {
+            const res = await listDocuments();
+            if (res.ok) {
+                fileList = res.data.filter((d) => d.type === "image");
+                showFilePicker = true;
+            }
+        } catch (e) {
+            console.error("Failed to list:", e);
+        }
+    }
+
+    async function pickFile(doc) {
+        showFilePicker = false;
+        await loadImage(doc.id);
+    }
+
+    function handleFileMenuAction(item) {
+        if (item === "New") {
+            clearCanvas();
+            fileName = "Untitled";
+            currentDocId = null;
+        } else if (item === "Save") {
+            handleSave();
+        } else if (item === "Save As...") {
+            handleSaveAs();
+        } else if (item === "Open...") {
+            handleOpenDialog();
+        } else if (item === "Exit") {
+            if (windowId) windows.close(windowId);
+        }
+        menuOpen = null;
+    }
+
+    function toggleMenu(name) {
+        menuOpen = menuOpen === name ? null : name;
+    }
+
+    function handleBodyClick() {
+        menuOpen = null;
+    }
 </script>
 
-<div class="paint">
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="paint" on:click={handleBodyClick}>
     <div class="paint-menu-bar">
-        <span class="paint-menu-item">File</span>
+        <div class="paint-menu-trigger" class:open={menuOpen === "File"}>
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <span on:click|stopPropagation={() => toggleMenu("File")}>File</span
+            >
+            {#if menuOpen === "File"}
+                <div class="paint-menu-dropdown">
+                    {#each fileMenuItems as item}
+                        {#if item === "-"}
+                            <div class="paint-menu-sep"></div>
+                        {:else}
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            <div
+                                class="paint-menu-dd-item"
+                                on:click|stopPropagation={() =>
+                                    handleFileMenuAction(item)}
+                            >
+                                {item}
+                            </div>
+                        {/if}
+                    {/each}
+                </div>
+            {/if}
+        </div>
         <span class="paint-menu-item">Edit</span>
         <span class="paint-menu-item">View</span>
         <span class="paint-menu-item">Image</span>
@@ -216,8 +379,46 @@
                 ></button>
             {/each}
         </div>
+        <div class="paint-status">
+            <span>{fileName}</span>
+            {#if saving}
+                <span>Saving...</span>
+            {/if}
+        </div>
     </div>
 </div>
+
+{#if showFilePicker}
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div class="file-picker-overlay" on:click={() => (showFilePicker = false)}>
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="file-picker" on:click|stopPropagation>
+            <div class="fp-title-bar">Open</div>
+            <div class="fp-list">
+                {#if fileList.length === 0}
+                    <div class="fp-empty">No images saved yet.</div>
+                {:else}
+                    {#each fileList as doc}
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <div
+                            class="fp-item"
+                            on:dblclick={() => pickFile(doc)}
+                            on:click={() => pickFile(doc)}
+                        >
+                            <Image size={16} color="#2196F3" />
+                            <span>{doc.name}</span>
+                        </div>
+                    {/each}
+                {/if}
+            </div>
+            <div class="fp-footer">
+                <button class="fp-btn" on:click={() => (showFilePicker = false)}
+                    >Cancel</button
+                >
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style>
     .paint {
@@ -240,6 +441,46 @@
     .paint-menu-item:hover {
         background: var(--xp-selection);
         color: white;
+    }
+
+    .paint-menu-trigger {
+        position: relative;
+        font-size: 11px;
+        padding: 1px 6px;
+        cursor: pointer;
+    }
+    .paint-menu-trigger:hover,
+    .paint-menu-trigger.open {
+        background: var(--xp-selection);
+        color: white;
+    }
+
+    .paint-menu-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff;
+        border: 1px solid #808080;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        min-width: 180px;
+        z-index: 100;
+        padding: 2px 0;
+    }
+
+    .paint-menu-dd-item {
+        padding: 3px 24px 3px 28px;
+        font-size: 11px;
+        cursor: pointer;
+        color: #000;
+    }
+    .paint-menu-dd-item:hover {
+        background: var(--xp-selection);
+        color: white;
+    }
+
+    .paint-menu-sep {
+        border-top: 1px solid #c0c0c0;
+        margin: 2px 2px;
     }
 
     .paint-workspace {
@@ -369,5 +610,96 @@
     .palette-color.active {
         border: 2px solid #000;
         outline: 1px solid #fff;
+    }
+
+    .paint-status {
+        margin-left: auto;
+        font-size: 10px;
+        color: #666;
+        display: flex;
+        gap: 8px;
+    }
+
+    /* File Picker Dialog */
+    .file-picker-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    }
+
+    .file-picker {
+        width: 360px;
+        background: var(--xp-window-bg);
+        border: 2px solid;
+        border-color: var(--xp-button-highlight) var(--xp-button-shadow)
+            var(--xp-button-shadow) var(--xp-button-highlight);
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .fp-title-bar {
+        background: linear-gradient(
+            180deg,
+            #0a246a 0%,
+            #3a6ea5 50%,
+            #0a246a 100%
+        );
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 8px;
+    }
+
+    .fp-list {
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 4px;
+        background: #fff;
+        margin: 8px;
+        border: 1px solid;
+        border-color: var(--xp-button-shadow) var(--xp-button-highlight)
+            var(--xp-button-highlight) var(--xp-button-shadow);
+    }
+
+    .fp-empty {
+        padding: 16px;
+        text-align: center;
+        color: #999;
+        font-size: 11px;
+    }
+
+    .fp-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        font-size: 11px;
+        cursor: pointer;
+    }
+    .fp-item:hover {
+        background: var(--xp-selection);
+        color: white;
+    }
+
+    .fp-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 4px 8px 8px;
+    }
+    .fp-btn {
+        font-size: 11px;
+        padding: 3px 16px;
+        background: var(--xp-button-face);
+        border: 2px solid;
+        border-color: var(--xp-button-highlight) var(--xp-button-shadow)
+            var(--xp-button-shadow) var(--xp-button-highlight);
+        cursor: pointer;
+        font-family: var(--xp-font);
+    }
+    .fp-btn:hover {
+        background: #e0ddd0;
     }
 </style>

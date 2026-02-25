@@ -9,4 +9,12 @@ export default defineConfig({
     assetsDir: 'assets',
   },
   base: '/build/',
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://accelio-xp.test',
+        changeOrigin: true,
+      },
+    },
+  },
 })

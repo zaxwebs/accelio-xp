@@ -28,6 +28,7 @@ final class Kernel
     {
         $this->router = new Router($app->container());
         $this->pipeline = new Pipeline();
+        $this->pipeline->pipe(new \Accelio\Http\CorsMiddleware());
 
         $app = $this->app;
         $router = $this->router;

@@ -1,6 +1,6 @@
 # Windows XP Clone
 
-A fully functional Windows XP desktop clone built with **Svelte**, **Lucide** icons, and powered by the **Accelio** PHP framework.
+A fully functional Windows XP desktop clone built with **Svelte**, **Lucide** icons, and powered by the **Accelio** PHP framework — with **persistent storage** via SQLite.
 
 ## Features
 
@@ -10,15 +10,18 @@ A fully functional Windows XP desktop clone built with **Svelte**, **Lucide** ic
 - 🟢 **Start Menu** — two-column layout with pinned programs, right panel, and power options
 - 🖱️ **Desktop icons** — My Computer, Recycle Bin, My Documents, Internet Explorer
 - 📁 **Right-click context menu** on the desktop
+- 💾 **Persistent storage** — save and open files in Notepad and Paint via SQLite
 
 ### Built-in Applications
 
 | App | Description |
 |-----|-------------|
-| **Notepad** | Text editor with File/Edit/Format menus |
+| **Notepad** | Text editor with Save, Open, Save As via API |
 | **Calculator** | Standard calculator with full arithmetic and memory |
 | **Minesweeper** | Classic 9×9 game with flagging, flood-fill, timer |
-| **Paint** | Canvas drawing — pencil, eraser, line, rectangle, 24 colors |
+| **Paint** | Canvas drawing with save/open — pencil, eraser, line, rectangle, 24 colors |
+| **My Documents** | File explorer for saved documents with sidebar, toolbar, and status bar |
+| **Photo Viewer** | Windows XP Picture and Fax Viewer with zoom, rotate, prev/next, XP scrollbars |
 | **My Computer** | File Explorer with drives, usage bars, sidebar |
 | **Internet Explorer** | Address bar + iframe browser |
 | **Command Prompt** | Terminal with `dir`, `help`, `ver`, `ipconfig`, `systeminfo`, `cls`, `echo` |
@@ -32,8 +35,7 @@ Classic blue title bar gradients, 3D buttons, styled scrollbars, Tahoma/Segoe UI
 ### Development
 
 ```bash
-cd frontend
-npm install
+npm install --prefix frontend
 npm run dev
 ```
 
@@ -42,9 +44,7 @@ Open **http://localhost:5173/**
 ### Production (via Accelio)
 
 ```bash
-cd frontend
 npm run build
-cd ..
 composer install
 composer serve
 ```
@@ -57,6 +57,7 @@ Open **http://localhost:8080/**
 frontend/
   src/
     App.svelte                 Root orchestrator (boot → login → desktop)
+    lib/api.js                 API client for document persistence
     stores/windows.js          Window state management
     styles/xp-theme.css        XP Luna blue theme
     components/
@@ -67,23 +68,43 @@ frontend/
       StartMenu.svelte         Two-column program menu
       Window.svelte            Draggable/resizable window
     apps/
-      Notepad.svelte
+      Notepad.svelte           Text editor with persistence
       Calculator.svelte
       Minesweeper.svelte
-      Paint.svelte
+      Paint.svelte             Canvas drawing with image persistence
+      MyDocuments.svelte       File explorer for saved documents
+      ImageViewer.svelte       XP Photo Viewer
       MyComputer.svelte
       InternetExplorer.svelte
       CommandPrompt.svelte
 
-routes/web.php                 Accelio route serving the SPA
+src/
+  Core/Database.php            SQLite singleton with auto-migration
+  Http/CorsMiddleware.php      CORS middleware for Vite dev server
+
+routes/web.php                 API routes for document CRUD + image upload
+storage/images/                Saved Paint images
 public/build/                  Production build output
 ```
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/documents` | List all documents |
+| `GET` | `/api/documents/{id}` | Get single document |
+| `POST` | `/api/documents` | Create document |
+| `PUT` | `/api/documents/{id}` | Update document |
+| `DELETE` | `/api/documents/{id}` | Delete document |
+| `POST` | `/api/documents/upload` | Upload image (base64 PNG) |
+| `GET` | `/api/documents/{id}/image` | Serve saved image |
 
 ## Tech Stack
 
 - **Frontend** — [Svelte 5](https://svelte.dev/) + [Vite](https://vite.dev/)
 - **Icons** — [Lucide Svelte](https://lucide.dev/)
 - **Backend** — [Accelio](https://github.com/zaxwebs/accelio) (PHP 8.3+)
+- **Database** — SQLite (auto-created on first use)
 
 ## Requirements
 

@@ -13,7 +13,7 @@
         {
             name: "My Documents",
             icon: FolderOpen,
-            appName: "MyComputer",
+            appName: "MyDocuments",
             color: "#E8C94A",
         },
         {

@@ -16,6 +16,7 @@
         HelpCircle,
         Search,
         Play,
+        FolderOpen,
     } from "lucide-svelte";
 
     const dispatch = createEventDispatcher();
@@ -75,6 +76,13 @@
     function openApp(prog) {
         windows.open(prog.appName, prog.name, prog.icon);
         dispatch("close");
+    }
+
+    function handleRightItemClick(item) {
+        if (item.name === "My Documents") {
+            windows.open("MyDocuments", "My Documents", FolderOpen);
+            dispatch("close");
+        }
     }
 
     function handleClickOutside(e) {
@@ -137,7 +145,11 @@
 
             <div class="sm-right">
                 {#each rightItems as item}
-                    <div class="sm-right-item">
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <div
+                        class="sm-right-item"
+                        on:click={() => handleRightItemClick(item)}
+                    >
                         <span>{item.name}</span>
                     </div>
                 {/each}
