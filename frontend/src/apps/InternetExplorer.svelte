@@ -82,30 +82,6 @@
 
     function onLoad() {
         loading = false;
-
-        // Try to detect navigation inside iframe to update address bar
-        try {
-            const iframe = document.querySelector(".ie-iframe");
-            if (iframe && iframe.contentWindow) {
-                const loc = iframe.contentWindow.location;
-                if (loc.pathname === "/api/proxy") {
-                    const params = new URLSearchParams(loc.search);
-                    const navigatedUrl = params.get("url");
-                    if (navigatedUrl && navigatedUrl !== url) {
-                        url = navigatedUrl;
-                        inputUrl = navigatedUrl;
-                        // Push to history
-                        if (historyIndex < history.length - 1) {
-                            history = history.slice(0, historyIndex + 1);
-                        }
-                        history = [...history, navigatedUrl];
-                        historyIndex = history.length - 1;
-                    }
-                }
-            }
-        } catch (e) {
-            // Cross-origin — ignore silently
-        }
     }
 
     $: canGoBack = historyIndex > 0;

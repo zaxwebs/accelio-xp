@@ -220,13 +220,12 @@ $router->get('/api/proxy', function (Request $request) {
     $targetUrl = $request->query('url', '');
 
     if (empty($targetUrl)) {
-        return Response::html('<html><body><h1>No URL provided</h1><p>Enter a URL in the address bar above.</p></body></html>');
+        return Response::html('<html><body style="font-family:Tahoma,sans-serif;padding:40px"><h1>No URL provided</h1><p>Enter a URL in the address bar above.</p></body></html>');
     }
 
-    // Only allow http/https
     $scheme = parse_url($targetUrl, PHP_URL_SCHEME);
     if (!in_array($scheme, ['http', 'https'], true)) {
-        return Response::html('<html><body><h1>Invalid URL</h1><p>Only HTTP and HTTPS URLs are supported.</p></body></html>');
+        return Response::html('<html><body style="font-family:Tahoma,sans-serif;padding:40px"><h1>Invalid URL</h1><p>Only HTTP and HTTPS URLs are supported.</p></body></html>');
     }
 
     $context = stream_context_create([
@@ -237,130 +236,38 @@ $router->get('/api/proxy', function (Request $request) {
             'follow_location' => true,
             'max_redirects' => 5,
         ],
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-        ],
+        'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
     ]);
 
     $html = @file_get_contents($targetUrl, false, $context);
 
     if ($html === false) {
         return Response::html(
-            '<html><body style="font-family: Tahoma, sans-serif; padding: 40px;">' .
+            '<html><body style="font-family:Tahoma,sans-serif;padding:40px">' .
             '<h1>The page cannot be displayed</h1>' .
             '<p>The page you are looking for is currently unavailable.</p>' .
             '<hr><p>Internet Explorer</p></body></html>'
         );
     }
 
-    // Determine the base URL for rewriting relative paths
+    // Build base URL for resolving relative assets
     $parsed = parse_url($targetUrl);
-    $baseOrigin = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
-    $pathDir = str_replace('\\', '/', dirname($parsed['path'] ?? '/'));
-    $basePath = $baseOrigin . rtrim($pathDir, '/') . '/';
+    $baseHref = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '') . ($parsed['path'] ?? '/');
 
-    // 1. Convert ALL protocol-relative URLs (//domain.com/...) to https://
-    //    This covers src, href, srcset, inline styles, etc.
-    //    Pattern: quote or whitespace followed by //letter (avoids matching http:// itself)
+    // Fix protocol-relative URLs (//cdn.example.com → https://cdn.example.com)
     $html = preg_replace('/(["\',\s])\/\/([a-zA-Z])/', '$1https://$2', $html);
 
-    // 2. Remove any existing <base> tags
+    // Replace any existing <base> and inject ours so images/CSS/JS resolve correctly
     $html = preg_replace('/<base[^>]*>/i', '', $html);
-
-    // 3. Inject our <base> tag so relative URLs for images/CSS/JS resolve correctly
+    $baseTag = '<base href="' . htmlspecialchars($baseHref) . '" target="_self">';
     if (stripos($html, '<head') !== false) {
-        $html = preg_replace(
-            '/(<head[^>]*>)/i',
-            '$1<base href="' . htmlspecialchars($baseOrigin . ($parsed['path'] ?? '/')) . '" target="_self">',
-            $html,
-            1
-        );
+        $html = preg_replace('/(<head[^>]*>)/i', '$1' . $baseTag, $html, 1);
     } else {
-        $html = '<base href="' . htmlspecialchars($basePath) . '" target="_self">' . $html;
+        $html = $baseTag . $html;
     }
 
-    // 4. Rewrite <a href="..."> to go through proxy
-    $proxyBase = '/api/proxy?url=';
-
-    $makeAbsolute = function (string $url) use ($baseOrigin, $basePath): string {
-        if (str_starts_with($url, 'https://') || str_starts_with($url, 'http://')) {
-            return $url;
-        }
-        if (str_starts_with($url, '//')) {
-            return 'https:' . $url;
-        }
-        if (str_starts_with($url, '/')) {
-            return $baseOrigin . $url;
-        }
-        return $basePath . $url;
-    };
-
-    $html = preg_replace_callback(
-        '/(<a\s[^>]*href=["\'])([^"\']*?)(["\'])/i',
-        function ($matches) use ($proxyBase, $makeAbsolute) {
-            $href = $matches[2];
-            // Skip anchors, javascript:, mailto:, data:, empty
-            if (empty($href) || $href[0] === '#' || preg_match('/^(javascript:|mailto:|data:|tel:)/i', $href)) {
-                return $matches[0];
-            }
-            // Skip if already proxied
-            if (str_contains($href, '/api/proxy')) {
-                return $matches[0];
-            }
-            $absolute = $makeAbsolute($href);
-            return $matches[1] . $proxyBase . urlencode($absolute) . $matches[3];
-        },
-        $html
-    );
-
-    // 5. Rewrite <form action="..."> to go through proxy
-    $html = preg_replace_callback(
-        '/(<form\s[^>]*action=["\'])([^"\']*?)(["\'])/i',
-        function ($matches) use ($proxyBase, $makeAbsolute) {
-            $action = $matches[2];
-            if (empty($action) || $action[0] === '#') {
-                return $matches[0];
-            }
-            $absolute = $makeAbsolute($action);
-            return $matches[1] . $proxyBase . urlencode($absolute) . $matches[3];
-        },
-        $html
-    );
-
-    // 6. Strip CSP and X-Frame-Options meta tags
-    $html = preg_replace('/<meta[^>]*http-equiv=["\']Content-Security-Policy["\'][^>]*>/i', '', $html);
-    $html = preg_replace('/<meta[^>]*http-equiv=["\']X-Frame-Options["\'][^>]*>/i', '', $html);
-
-    // 7. Inject a small script to intercept clicks and keep navigation inside proxy
-    $interceptScript = <<<'JS'
-<script>
-document.addEventListener('click', function(e) {
-    var a = e.target.closest('a[href]');
-    if (!a) return;
-    var href = a.getAttribute('href');
-    if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
-    // If already going through proxy, let it happen
-    if (href.indexOf('/api/proxy') === 0) return;
-    // Make absolute and redirect through proxy
-    e.preventDefault();
-    var abs = href;
-    if (href.indexOf('http') !== 0) {
-        if (href.indexOf('//') === 0) abs = 'https:' + href;
-        else if (href.charAt(0) === '/') abs = location.protocol + '//' + location.host.replace(/:.*/,'') + href;
-        else abs = document.baseURI.replace(/[^\/]*$/, '') + href;
-    }
-    window.location.href = '/api/proxy?url=' + encodeURIComponent(abs);
-});
-</script>
-JS;
-
-    // Inject before </body> or at end
-    if (stripos($html, '</body>') !== false) {
-        $html = str_ireplace('</body>', $interceptScript . '</body>', $html);
-    } else {
-        $html .= $interceptScript;
-    }
+    // Strip frame-busting meta tags
+    $html = preg_replace('/<meta[^>]*http-equiv=["\'](?:Content-Security-Policy|X-Frame-Options)["\'][^>]*>/i', '', $html);
 
     return new Response(
         content: $html,
