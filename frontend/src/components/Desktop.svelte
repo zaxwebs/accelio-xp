@@ -61,7 +61,7 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div
     class="desktop"
     on:click={handleDesktopClick}
@@ -69,7 +69,7 @@
 >
     <div class="icon-grid">
         {#each desktopIcons as icon}
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <div
                 class="desktop-icon"
                 class:selected={selectedIcon === icon.name}
@@ -90,30 +90,36 @@
     </div>
 
     {#if contextMenu}
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
         <div
             class="xp-context-menu"
             style="left: {contextMenu.x}px; top: {contextMenu.y}px"
             on:click|stopPropagation
         >
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <div class="xp-context-menu-item" on:click={handleRefresh}>
                 Arrange Icons By
             </div>
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <div class="xp-context-menu-item" on:click={handleRefresh}>
                 Refresh
             </div>
             <div class="xp-context-menu-separator"></div>
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <div class="xp-context-menu-item" on:click={handleRefresh}>
                 Paste
             </div>
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <div class="xp-context-menu-item" on:click={handleRefresh}>
                 Paste Shortcut
             </div>
             <div class="xp-context-menu-separator"></div>
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <div class="xp-context-menu-item" on:click={handleRefresh}>
                 New ▸
             </div>
             <div class="xp-context-menu-separator"></div>
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <div class="xp-context-menu-item" on:click={handleRefresh}>
                 Properties
             </div>

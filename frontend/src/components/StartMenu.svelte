@@ -90,9 +90,9 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div class="start-menu-overlay" on:click={handleClickOutside}>
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
     <div class="start-menu" on:click|stopPropagation>
         <div class="sm-header">
             <div class="sm-user-avatar">
@@ -105,7 +105,7 @@
             <div class="sm-left">
                 <div class="sm-pinned">
                     {#each programs.filter((p) => p.pinned) as prog}
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                         <div class="sm-item" on:click={() => openApp(prog)}>
                             <svelte:component
                                 this={prog.icon}
@@ -122,7 +122,7 @@
                 <div class="sm-separator"></div>
                 <div class="sm-all-programs">
                     {#each programs.filter((p) => !p.pinned) as prog}
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                         <div class="sm-item" on:click={() => openApp(prog)}>
                             <svelte:component
                                 this={prog.icon}
@@ -145,7 +145,7 @@
 
             <div class="sm-right">
                 {#each rightItems as item}
-                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                     <div
                         class="sm-right-item"
                         on:click={() => handleRightItemClick(item)}
@@ -157,13 +157,13 @@
         </div>
 
         <div class="sm-footer">
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div class="sm-footer-btn" on:click={() => dispatch("close")}>
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
+            <div class="sm-footer-btn" on:click={() => dispatch("logoff")}>
                 <LogOut size={16} color="#C00" />
                 <span>Log Off</span>
             </div>
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div class="sm-footer-btn" on:click={() => dispatch("close")}>
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
+            <div class="sm-footer-btn" on:click={() => dispatch("shutdown")}>
                 <Power size={16} color="#C00" />
                 <span>Turn Off Computer</span>
             </div>

@@ -32,7 +32,7 @@
     CommandPrompt,
   };
 
-  let phase = "boot"; // 'boot' | 'login' | 'desktop'
+  let phase = "boot"; // 'boot' | 'login' | 'desktop' | 'shutdown'
   let startMenuOpen = false;
 
   function onBootComplete() {
@@ -41,6 +41,21 @@
 
   function onLogin() {
     phase = "desktop";
+  }
+
+  function handleLogoff() {
+    startMenuOpen = false;
+    windows.closeAll();
+    phase = "login";
+  }
+
+  function handleShutdown() {
+    startMenuOpen = false;
+    windows.closeAll();
+    phase = "shutdown";
+    setTimeout(() => {
+      phase = "boot";
+    }, 2500);
   }
 
   function toggleStartMenu() {
@@ -60,7 +75,14 @@
   <BootScreen on:complete={onBootComplete} />
 {:else if phase === "login"}
   <LoginScreen on:login={onLogin} />
+{:else if phase === "shutdown"}
+  <div class="shutdown-screen">
+    <div class="shutdown-content">
+      <div class="shutdown-text">Windows is shutting down...</div>
+    </div>
+  </div>
 {:else}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="xp-desktop-container"
     on:click={handleDesktopClick}
@@ -79,7 +101,11 @@
     {/each}
 
     {#if startMenuOpen}
-      <StartMenu on:close={closeStartMenu} />
+      <StartMenu
+        on:close={closeStartMenu}
+        on:logoff={handleLogoff}
+        on:shutdown={handleShutdown}
+      />
     {/if}
 
     <Taskbar {startMenuOpen} on:toggleStart={toggleStartMenu} />
@@ -92,5 +118,25 @@
     height: 100vh;
     position: relative;
     overflow: hidden;
+  }
+
+  .shutdown-screen {
+    width: 100vw;
+    height: 100vh;
+    background: #0a246a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .shutdown-content {
+    text-align: center;
+  }
+
+  .shutdown-text {
+    color: #fff;
+    font-size: 18px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    letter-spacing: 0.5px;
   }
 </style>

@@ -261,11 +261,11 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div class="paint" on:click={handleBodyClick}>
     <div class="paint-menu-bar">
         <div class="paint-menu-trigger" class:open={menuOpen === "File"}>
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
             <span on:click|stopPropagation={() => toggleMenu("File")}>File</span
             >
             {#if menuOpen === "File"}
@@ -274,7 +274,7 @@
                         {#if item === "-"}
                             <div class="paint-menu-sep"></div>
                         {:else}
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                             <div
                                 class="paint-menu-dd-item"
                                 on:click|stopPropagation={() =>
@@ -335,6 +335,7 @@
                         class="brush-btn"
                         class:active={brushSize === size}
                         on:click={() => (brushSize = size)}
+                        title="Brush size {size}"
                     >
                         <div
                             class="brush-preview"
@@ -376,6 +377,7 @@
                     class:active={color === c}
                     style="background: {c};"
                     on:click={() => (color = c)}
+                    title={c}
                 ></button>
             {/each}
         </div>
@@ -389,9 +391,9 @@
 </div>
 
 {#if showFilePicker}
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
     <div class="file-picker-overlay" on:click={() => (showFilePicker = false)}>
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
         <div class="file-picker" on:click|stopPropagation>
             <div class="fp-title-bar">Open</div>
             <div class="fp-list">
@@ -399,7 +401,7 @@
                     <div class="fp-empty">No images saved yet.</div>
                 {:else}
                     {#each fileList as doc}
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                         <div
                             class="fp-item"
                             on:dblclick={() => pickFile(doc)}

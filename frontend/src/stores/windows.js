@@ -51,6 +51,9 @@ function createWindowStore() {
         updateSize(id, width, height) {
             update(wins => wins.map(w => w.id === id ? { ...w, width, height } : w));
         },
+        closeAll() {
+            set([]);
+        },
     };
 }
 

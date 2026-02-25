@@ -123,7 +123,7 @@
     });
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div class="cmd" bind:this={terminalEl} on:click={focusInput}>
     <div class="cmd-output">
         {#each lines as line}

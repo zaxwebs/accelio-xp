@@ -101,7 +101,7 @@
             <div class="mc-section-header">Hard Disk Drives</div>
             <div class="mc-grid">
                 {#each drives as drive}
-                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                     <div
                         class="mc-item"
                         class:selected={selected === drive.name}
@@ -138,7 +138,7 @@
             <div class="mc-section-header">Files Stored on This Computer</div>
             <div class="mc-grid">
                 {#each folders as folder}
-                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                     <div
                         class="mc-item"
                         class:selected={selected === folder.name}

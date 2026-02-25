@@ -15,7 +15,7 @@
     } from "lucide-svelte";
     import { getImageUrl, getDocument, listDocuments } from "../lib/api.js";
 
-    export let windowId = null;
+    export const windowId = null;
     export let documentId = null;
 
     let imageSrc = "";

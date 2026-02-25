@@ -83,7 +83,7 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div class="my-documents">
     <div class="md-menu-bar">
         <span class="md-menu-item">File</span>
@@ -121,10 +121,12 @@
         <div class="md-sidebar">
             <div class="md-sidebar-section">
                 <div class="md-sidebar-header">File and Folder Tasks</div>
+                <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                 <div class="md-sidebar-item" on:click={loadDocuments}>
                     Refresh
                 </div>
                 {#if selected !== null}
+                    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                     <div class="md-sidebar-item" on:click={handleDelete}>
                         Delete this file
                     </div>
@@ -167,7 +169,7 @@
             {:else}
                 <div class="md-file-list">
                     {#each documents as doc}
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                         <div
                             class="md-file-item"
                             class:selected={selected === doc.id}

@@ -176,12 +176,12 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div class="notepad" on:click={handleBodyClick}>
     <div class="menu-bar">
         {#each Object.keys(menus) as menu}
             <div class="menu-trigger" class:open={menuOpen === menu}>
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                 <span on:click|stopPropagation={() => toggleMenu(menu)}
                     >{menu}</span
                 >
@@ -191,7 +191,7 @@
                             {#if item === "-"}
                                 <div class="menu-sep"></div>
                             {:else}
-                                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                                 <div
                                     class="menu-item"
                                     on:click|stopPropagation={() =>
@@ -222,9 +222,9 @@
 </div>
 
 {#if showFilePicker}
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
     <div class="file-picker-overlay" on:click={() => (showFilePicker = false)}>
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
         <div class="file-picker" on:click|stopPropagation>
             <div class="fp-title-bar">Open</div>
             <div class="fp-list">
@@ -232,7 +232,7 @@
                     <div class="fp-empty">No text documents saved yet.</div>
                 {:else}
                     {#each fileList as doc}
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
                         <div
                             class="fp-item"
                             on:dblclick={() => pickFile(doc)}
